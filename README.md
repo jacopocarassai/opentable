@@ -2,8 +2,8 @@
 
 A restaurant search and discovery prototype built on top of Algolia, using a public OpenTable-style dataset.
 
-**Live demo:** _add link after deploying_
-**Repo:** _this repository_
+**Live demo:** [https://opentable-mu.vercel.app/](https://opentable-mu.vercel.app/)<br>
+**Repo:** [https://github.com/jacopocarassai/opentable](https://github.com/jacopocarassai/opentable)
 
 ## What this is
 
