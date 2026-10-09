@@ -36,8 +36,9 @@ async function main() {
       "cuisine_category",
       "dining_style",
       "price_tier",
+      "rating",
+      "is_chain",
       "filterOnly(city)",
-      "filterOnly(is_chain)",
     ],
 
     // I am ranking geo at the bottom. This is because I noticed that when there was no query, the map layer was showing only a specific set

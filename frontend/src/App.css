@@ -10,10 +10,6 @@
   display: none;
 }
 
-[data-theme="dark"] .chain-hint{
-  color: #34ebcc;
-}
-
 [data-theme="dark"] .logo-dark {
   display: block;
 }
@@ -24,6 +20,10 @@
 
 [data-theme="light"] .logo-dark {
   display: none;
+}
+
+[data-theme="dark"] .chain-hint {
+  color: #34ebcc;
 }
 
 .theme-toggle {
@@ -204,6 +204,29 @@
   .app-body {
     grid-template-columns: 1fr;
   }
+
+  .filters-toggle {
+    display: block !important;
+    width: calc(100% - 24px);
+    margin-top: 12px;
+    padding: 10px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    background: var(--color-surface);
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .filters-body {
+    display: none;
+  }
+
+  .filters-body.expanded {
+    display: block;
+    margin-top: 16px;
+  }
 }
 
 /* ---------- Filters ---------- */
@@ -240,6 +263,12 @@
   margin-bottom: 8px;
 }
 
+/* Hidden by default; the 800px media query above shows it and hides
+   .filters-body in its place, collapsing the whole panel on mobile. */
+.filters-toggle {
+  display: none;
+}
+
 .ais-RefinementList-list {
   padding-left: 0;
 }
@@ -250,11 +279,16 @@
   list-style-type: none;
 }
 
-.ais-RefinementList-label {
+.ais-RefinementList-label,
+.ais-ToggleRefinement-label {
   display: flex;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+}
+
+.ais-ToggleRefinement-labelText {
+  font-size: 14px;
 }
 
 .ais-RefinementList-count {
@@ -271,7 +305,8 @@
   font-size: 13px;
 }
 
-.ais-RefinementList-checkbox {
+.ais-RefinementList-checkbox,
+.ais-ToggleRefinement-checkbox {
   appearance: none;
   -webkit-appearance: none;
   width: 16px;
@@ -287,7 +322,8 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.ais-RefinementList-checkbox::before {
+.ais-RefinementList-checkbox::before,
+.ais-ToggleRefinement-checkbox::before {
   content: "";
   width: 9px;
   height: 9px;
@@ -297,22 +333,68 @@
   clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
 }
 
-.ais-RefinementList-checkbox:checked {
+.ais-RefinementList-checkbox:checked,
+.ais-ToggleRefinement-checkbox:checked {
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
 
-.ais-RefinementList-checkbox:checked::before {
+.ais-RefinementList-checkbox:checked::before,
+.ais-ToggleRefinement-checkbox:checked::before {
   transform: scale(1);
 }
 
-.ais-RefinementList-checkbox:hover {
+.ais-RefinementList-checkbox:hover,
+.ais-ToggleRefinement-checkbox:hover {
   border-color: var(--color-primary);
 }
 
-.ais-RefinementList-checkbox:focus-visible {
+.ais-RefinementList-checkbox:focus-visible,
+.ais-ToggleRefinement-checkbox:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.ais-RangeInput-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ais-RangeInput-input {
+  width: 56px;
+  padding: 6px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 13px;
+}
+
+.ais-RangeInput-input:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.ais-RangeInput-separator {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+
+.ais-RangeInput-submit {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ais-RangeInput-submit:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
 }
 
 /* ---------- Results ---------- */
@@ -340,16 +422,14 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
+  align-items: stretch;
 }
 
-/* Grid rows already stretch every .ais-Hits-item to the row's full
-   height; making the item itself a flex container lets its child
+/* Grid rows stretch every .ais-Hits-item to the row's full height by
+   default; making the item itself a flex container lets its child
    (.card) inherit that full height too, instead of only being as
-   tall as its own content. Combined with `.card-body { flex: 1 }`
-   and `.card-actions { margin-top: auto }` below, this keeps every
-   card in a row the same height and keeps the action buttons
-   aligned along the same bottom edge regardless of how much text
-   a given restaurant's name/cuisine/location take up. */
+   tall as its own content. See .card's explicit width/height below
+   for the other half of this. */
 .ais-Hits-item {
   display: flex;
 }
@@ -360,9 +440,6 @@
   color: var(--color-text-muted);
 }
 
-/* .ais-Pagination-link is shared by the clickable <a> AND the
-   disabled first/previous/next/last items, which InstantSearch
-   renders as a plain <span> since they have nothing to link to. */
 .ais-Pagination {
   margin-top: 32px;
   display: flex;
@@ -401,6 +478,8 @@
 /* ---------- Restaurant card ---------- */
 
 .card {
+  width: 100%;
+  height: 100%;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 14px;
@@ -447,10 +526,9 @@
 }
 
 /* flex: 1 lets the card body absorb whatever extra height .card
-   gains from being stretched to match the tallest card in its row
-   (see .ais-Hits-item above), which is what makes margin-top: auto
-   on .card-actions below actually push the buttons to the bottom
-   edge instead of leaving blank space after them. */
+   gains from being stretched to match the tallest card in its row,
+   which is what makes margin-top: auto on .card-actions below
+   actually push the buttons to the bottom edge. */
 .card-body {
   padding: 14px 16px 16px;
   display: flex;
@@ -555,6 +633,41 @@
 .compare-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Below 600px, force exactly two columns instead of letting
+   auto-fill decide, and shrink the card itself to fit comfortably. */
+@media (max-width: 600px) {
+  .results{
+    display: block;
+    width: calc(100% - 24px);
+  }
+
+  .hits-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .card-image {
+    height: 100px;
+  }
+
+  .card-body {
+    padding: 10px 12px 12px;
+  }
+
+  .card-body h3 {
+    font-size: 14px;
+  }
+
+  .card-actions {
+    flex-direction: column;
+  }
+
+  .compare-button,
+  .reserve-button {
+    width: 100%;
+  }
 }
 
 /* ---------- Compare tray ---------- */

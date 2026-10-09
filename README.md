@@ -15,7 +15,7 @@ I wanted to build something that actually wrestles with two very different kinds
 
 The source data comes as two files that need to be joined: `restaurants_list.json` (location, booking links, payment info, 5,000 records) and `restaurants_info.csv` (ratings, cuisine, price, dining style, 5,000 records). Both join cleanly 1:1 on `objectID`, no orphans in either direction.
 
-A few decisions worth calling out (full reasoning is in the script's docstring):
+A few decisions worth calling out:
 
 - **Price is represented twice, and the two signals don't fully agree** (`price` 2 to 4 in the JSON vs. the CSV's `price_range` string). I kept both. `price_tier` (2 to 4, mapped to $$/$$$/$$$$) is the primary filter facet, and `price_range_label` is kept around for display.
 - **114 raw `food_type` values** are kept as is for search matching, but I also rolled them up into about 12 `cuisine_category` buckets for browsing. Nobody wants to browse 114 checkboxes, but "Italian" as a facet option makes sense.
@@ -88,21 +88,10 @@ npm run dev
 
 > **The index name needs to match between steps 2 and 3.** Both default to `opentable_restaurants` (`ALGOLIA_INDEX_NAME` for the script, `VITE_ALGOLIA_INDEX_NAME` in `.env.local` for the frontend). This only matters if you rename the index in your Algolia dashboard or pass `ALGOLIA_INDEX_NAME` explicitly, in which case update the other one to match, or the indexing script will happily configure and fill an index the frontend never actually queries.
 
-## Relevance testing
-
-I tested manually against a handful of query types I cared about. The notes below are honest about what worked out of the box versus what needed a config change.
-
-- **Broad query** ("italian") returns strong results immediately through the `cuisine` attribute (870 records). `cuisine_category` is deliberately not searchable (see the table above), so this match comes from the precise food type value, not the rollup bucket.
-- **Specific or known-item query** (an exact restaurant name). Typo tolerance, combined with `typo` sitting first in the ranking formula, means the right restaurant surfaces first even when it's far from the user's location.
-- **Misspelled query** (a transposed or missing letter in a restaurant name) is handled by Algolia's built in typo tolerance without extra configuration. I left `minWordSizefor1Typo` and `minWordSizefor2Typos` at the defaults (4 and 8), since restaurant names are often short and a too aggressive threshold started surfacing unrelated matches on 3-4 letter names.
-- **Ambiguous query** (a cuisine name that's also part of a dish, or a neighborhood that's also a common word) relies on the searchable attribute ordering (name, then cuisine, then location) to avoid surprising matches. This would benefit from more dedicated testing against real query logs in a production setting.
-- **Location-sensitive query**, the virtual replica plus `Configure`'s `aroundLatLng` handles "near me" sorting, see the fallback behavior above for when location isn't available.
-- **Empty query** returns the default ranked (rating and review count weighted) result set rather than a blank state, so someone landing on the page with no search term yet still sees well-regarded restaurants.
-- **Custom ranking order**: I tested `desc(review_count), desc(rating)` (review count first) against `desc(rating), desc(review_count)` (what I kept). Review-count-first consistently promoted a handful of very high volume but only decent restaurants (4.2-4.3 stars with thousands of reviews) above excellent but newer places. Rating-first matched my own expectations better for this dataset, though in a real setting I'd want to validate this against actual conversion data rather than eyeballing it.
 
 ## What I'd improve with more time
 
-- The current synonym list (7 entries, see `configure_and_index.mjs`, `bbq` and `barbecue` among them) is hand curated from spot checking this dataset, not derived from real query logs. A production version would need a systematic pass against real search terms to find gaps this manual approach missed, plus general plural/singular handling instead of one off entries.
+- The current synonym list (7 entries, see `configure_and_index.mjs`, `bbq` and `barbecue` among them) is hand curated from spot checking this dataset, not derived from real query logs. A production version would need a pass against real search terms to find gaps this manual approach missed, plus general plural/singular handling instead of one off entries.
 - Algolia Rules for merchandising specific results on seasonal or promoted queries, like boosting newly onboarded restaurants.
 - A geocoded "search this city" fallback input for when geolocation is denied, instead of relying on someone typing a city name into the main search box.
 - Click and conversion event tracking wired up to Algolia Insights, so ranking could incorporate real behavioral signals instead of only static rating and review count.
